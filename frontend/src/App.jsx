@@ -1,22 +1,27 @@
-import React,{ useState } from 'react'
+import React, { useState } from 'react'
 import './App.css'
 import { Register } from './Register';
 import { Login } from './Login';
-function App() {
-  const [curentFrom, setCurrentFrom] = useState('login');
+import { BrowserRouter as Router, Route, Routes } from 'react-router-dom';
+import Home from './home/home.jsx';
 
-  const toogleForm = (formName) => {
-    setCurrentFrom(formName);
-  }
+
+function App() {
   return (
-    
-      <div className="App">
-        {
-          curentFrom === 'login' ? <Login onFormSwitch={toogleForm} /> : <Register onFormSwitch={toogleForm} />
-        }
-      </div>
-    
-    
+    <AuthProvider>
+      <Router>
+        <Routes>
+          <Route path="/home" element={<Home />}>
+            <Route path="login" element={<Login />} />
+            <Route path="register" element={<Register />} />
+            <Route path=":userid" element={<UserProfile />} />
+            <Route path=":goodsid" element={<ProductDetail />} />
+          </Route>
+          <Route path="/" element={<Navigate to="/home" replace />} />
+        </Routes>
+      </Router>
+    </AuthProvider>
+
   )
 }
 

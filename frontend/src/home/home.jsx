@@ -1,9 +1,9 @@
-import React from "react";
-import { Outlet, useNavigate } from "react-router-dom";
+import React ,{useState}from "react";
+import { Outlet, useNavigate ,Link} from "react-router-dom";
 import './home.css';
 
 const Home = () => {
-    const [isLogin, setLsLogin] = useState(false);
+    const [isLogin, setIsLogin] = useState(false);
     const [user, setUser] = useState({});
 
     return (
