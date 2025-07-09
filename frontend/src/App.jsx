@@ -9,11 +9,14 @@ function App() {
     setCurrentFrom(formName);
   }
   return (
-    <div className="App">
-      {
-        curentFrom === 'login' ? <Login onFormSwitch={toogleForm} /> : <Register onFormSwitch={toogleForm} />
-      }
-    </div>
+    
+      <div className="App">
+        {
+          curentFrom === 'login' ? <Login onFormSwitch={toogleForm} /> : <Register onFormSwitch={toogleForm} />
+        }
+      </div>
+    
+    
   )
 }
 
