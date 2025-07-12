@@ -33,7 +33,7 @@ const Home = () => {
                     <nav>
                         <ul>
                             <li><Link to="/home">Ground</Link></li>
-                            <li><Link to="/home/orders">Orders</Link></li>
+                            <li><Link to="/home/orders">My Orders</Link></li>
                             <li>
                                 <div className="search-box">
                                     <input type="text" placeholder="Search..." />

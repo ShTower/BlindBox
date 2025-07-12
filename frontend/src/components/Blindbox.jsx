@@ -4,4 +4,6 @@ import './Blindbox.css';
 
 const Blindbox = () => {
     
-}
+};
+
+export default Blindbox;

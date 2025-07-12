@@ -7,7 +7,7 @@ import { MemoryRouter } from 'react-router-dom'
 
 createRoot(document.getElementById('root')).render(
   <StrictMode>
-    <MemoryRouter>
+    <MemoryRouter>  
       <Home />
     </MemoryRouter>
   </StrictMode>,
