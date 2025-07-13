@@ -1,5 +1,4 @@
-const db = require('../db'); 
-const { update } = require('./user');
+const db = require('../database');
 
 const Product = {
     create: async (productData) => {
@@ -58,6 +57,29 @@ const Product = {
                 }
             );
         });
-    }
+    },
 
-}
+    findById: async (id) => {
+        return new Promise((resolve, reject) => {
+            db.get('SELECT * FROM products WHERE id = ?', [id], (err, row) => {
+                if (err) {
+                    return reject(err);
+                }
+                resolve(row || null);
+            });
+        });
+    },
+
+    delete: async (id) => {
+        return new Promise((resolve, reject) => {
+            db.run('DELETE FROM products WHERE id = ?', [id], function(err) {
+                if (err) {
+                    return reject(err);
+                }
+                resolve({ changes: this.changes });
+            });
+        });
+    }
+};
+
+module.exports = Product;

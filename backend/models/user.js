@@ -1,18 +1,17 @@
-const db = require('../database')
+const db = require('../database');
 
 const User = {
     create: async (userData) => {
-        const { username, email, password_hash } = userData;
-        const query = 'INSERT INTO users (username, email, password) VALUES (?, ?, ?)';
-        return new Promise((resolve , reject) => {
+        const { username, email, password } = userData;
+        return new Promise((resolve, reject) => {
             db.run(
                 'INSERT INTO users (username, email, password) VALUES (?, ?, ?)',
-                [username, email, password_hash],
+                [username, email, password],
                 function(err) {
                     if (err) {
                         return reject(err);
                     }
-                    resolve({ id: this.lastID, ...userData });
+                    resolve({ id: this.lastID, username, email });
                 }
             );
         });
@@ -20,11 +19,11 @@ const User = {
 
     findById: async (id) => {
         return new Promise((resolve, reject) => {
-            db.get('SELECT * FROM users WHERE id = ?', [id], (err, row) => {
+            db.get('SELECT id, username, email FROM users WHERE id = ?', [id], (err, row) => {
                 if (err) {
                     return reject(err);
                 }
-                resolve(row);
+                resolve(row || null);
             });
         });
     },
@@ -46,26 +45,63 @@ const User = {
                 if (err) {
                     return reject(err);
                 }
-                resolve(row);
+                resolve(row || null);
+            });
+        });
+    },
+
+    findAll: async () => {
+        return new Promise((resolve, reject) => {
+            db.all('SELECT id, username, email FROM users', (err, rows) => {
+                if (err) {
+                    return reject(err);
+                }
+                resolve(rows);
             });
         });
     },
 
     update: async (id, userData) => {
-        const { username, email, password_hash } = userData;
+        const { username, email, password } = userData;
         return new Promise((resolve, reject) => {
             db.run(
                 'UPDATE users SET username = ?, email = ?, password = ? WHERE id = ?',
-                [username, email, password_hash, id],
+                [username, email, password, id],
                 function(err) {
                     if (err) {
                         return reject(err);
                     }
-                    resolve({ changes: this.changess});
+                    resolve({ changes: this.changes });
                 }
             );
         });
     },
+
+    delete: async (id) => {
+        return new Promise((resolve, reject) => {
+            db.run('DELETE FROM users WHERE id = ?', [id], function(err) {
+                if (err) {
+                    return reject(err);
+                }
+                resolve({ changes: this.changes });
+            });
+        });
+    },
+
+    updatePassword: async (id, newPassword) => {
+        return new Promise((resolve, reject) => {
+            db.run(
+                'UPDATE users SET password = ? WHERE id = ?',
+                [newPassword, id],
+                function(err) {
+                    if (err) {
+                        return reject(err);
+                    }
+                    resolve({ changes: this.changes });
+                }
+            );
+        });
+    }
 };
 
 module.exports = User;

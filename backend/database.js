@@ -23,7 +23,7 @@ function initializeTables(){
 
         db.run(`CREATE TABLE IF NOT EXISTS users (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
-            name TEXT NOT NULL,
+            username TEXT NOT NULL,
             email TEXT UNIQUE NOT NULL,
             password TEXT NOT NULL
         )`, (err) => {
@@ -66,8 +66,10 @@ function initializeTables(){
                 console.log('Orders table created or already exists.');
             }
         });
-        db.close(); 
         console.log('Database initialization complete.');
         
+        // 初始化示例数据
+        const { initializeSampleData } = require('./data/sample-data');
+        initializeSampleData();
     })
 }

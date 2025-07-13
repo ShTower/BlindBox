@@ -1,7 +1,6 @@
-const db = require('../db'); 
-const { create } = require('./user');
+const db = require('../database');
 
-const Product = {
+const Order = {
     create : async (orderData) => {
         const { user_id, product_id, quantity, total_price } = orderData;
         return new Promise((resolve, reject) => {
@@ -43,5 +42,29 @@ const Product = {
                 resolve(rows);
             });
         });
+    },
+
+    findById: async (id) => {
+        return new Promise((resolve, reject) => {
+            db.get('SELECT * FROM orders WHERE id = ?', [id], (err, row) => {
+                if (err) {
+                    return reject(err);
+                }
+                resolve(row || null);
+            });
+        });
+    },
+
+    findAll: async () => {
+        return new Promise((resolve, reject) => {
+            db.all('SELECT * FROM orders', (err, rows) => {
+                if (err) {
+                    return reject(err);
+                }
+                resolve(rows);
+            });
+        });
     }
-}
+};
+
+module.exports = Order;
