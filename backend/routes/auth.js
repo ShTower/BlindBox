@@ -2,6 +2,7 @@ const express = require('express');
 const bcrypt = require('bcrypt');
 const passport = require('passport');
 const User = require('../models/user');
+const { checkAuthenticated } = require('../middleware/auth');
 const router = express.Router();
 
 // 用户注册
@@ -62,18 +63,12 @@ router.post('/logout', (req, res) => {
 });
 
 // 获取当前用户信息
-router.get('/me', (req, res) => {
-    if (!req.isAuthenticated()) {
-        return res.status(401).json({ error: '未登录' });
-    }
-    
+router.get('/me', checkAuthenticated, (req, res) => {
     res.json({
-        user: {
-            id: req.user.id,
-            username: req.user.username,
-            email: req.user.email
-        }
+        id: req.user.id,
+        username: req.user.username,
+        email: req.user.email
     });
 });
 
-module.exports = router; 
+module.exports = router;

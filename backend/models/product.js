@@ -1,83 +1,59 @@
 const db = require('../database');
 
 const Product = {
-    create: async (productData) => {
-        const {name, description,price ,stock,image_url} = productData;
+    create: (productData) => {
         return new Promise((resolve, reject) => {
             db.run(
-                'INSERT INTO products (name, description, price, stock, image_url) VALUES (?, ?, ?, ?, ?)',
-                [name, description, price, stock, image_url],
+                'INSERT INTO products (name, description, price, image_url, stock, user_id) VALUES (?, ?, ?, ?, ?, ?)',
+                [productData.name, productData.description, productData.price, productData.image_url, productData.stock, productData.user_id],
                 function(err) {
                     if (err) {
-                        return reject(err);
+                        reject(err);
+                    } else {
+                        resolve({ id: this.lastID, ...productData });
                     }
-                    resolve({ id: this.lastID, ...productData });
                 }
             );
         });
     },
 
-    findAll : async () => {
+    findAll: () => {
         return new Promise((resolve, reject) => {
             db.all('SELECT * FROM products', [], (err, rows) => {
                 if (err) {
-                    return reject(err);
+                    reject(err);
+                } else {
+                    resolve(rows);
                 }
-                resolve(rows);
             });
         });
     },
 
-    update : async (id, productData) => {
-        const { name, description, price, stock, image_url } = productData;
-        return new Promise((resolve, reject) => {
-            db.run(
-                'UPDATE products SET name = ?, description = ?, price = ?, stock = ?, image_url = ? WHERE id = ?',
-                [name, description, price, stock, image_url, id],
-                function(err) {
-                    if (err) {
-                        return reject(err);
-                    }
-                    resolve({ id, ...productData });
-                }
-            );
-        });
-    },
-
-    updateStock: async (id, stock) => {
-        return new Promise((resolve, reject) => {
-            db.run(
-                'UPDATE products SET stock = ? WHERE id = ?',
-                [stock, id],
-                function(err) {
-                    if (err) {
-                        return reject(err);
-                    }
-                    resolve({ id, stock });
-                }
-            );
-        });
-    },
-
-    findById: async (id) => {
+    findById: (id) => {
         return new Promise((resolve, reject) => {
             db.get('SELECT * FROM products WHERE id = ?', [id], (err, row) => {
                 if (err) {
-                    return reject(err);
+                    reject(err);
+                } else {
+                    resolve(row);
                 }
-                resolve(row || null);
             });
         });
     },
 
-    delete: async (id) => {
+    updateStock: (id, newStock) => {
         return new Promise((resolve, reject) => {
-            db.run('DELETE FROM products WHERE id = ?', [id], function(err) {
-                if (err) {
-                    return reject(err);
+            db.run(
+                'UPDATE products SET stock = ? WHERE id = ?',
+                [newStock, id],
+                function(err) {
+                    if (err) {
+                        reject(err);
+                    } else {
+                        resolve({ changes: this.changes });
+                    }
                 }
-                resolve({ changes: this.changes });
-            });
+            );
         });
     }
 };

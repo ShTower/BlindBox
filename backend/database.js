@@ -8,7 +8,7 @@ if (!fs.existsSync(dbPath)) {
     fs.mkdirSync(path.dirname(dbPath), { recursive: true });
 }
 
-const db = new sqlite3.Database(dbPath ,sqlite3.OPEN_READWRITE | sqlite3.OPEN_CREATE, (err) => {
+const db = new sqlite3.Database(dbPath, sqlite3.OPEN_READWRITE | sqlite3.OPEN_CREATE, (err) => {
     if (err) {
         console.error('Error opening database:', err.message);
     } else {
@@ -17,7 +17,7 @@ const db = new sqlite3.Database(dbPath ,sqlite3.OPEN_READWRITE | sqlite3.OPEN_CR
     }
 });
 
-function initializeTables(){
+function initializeTables() {
     db.serialize(() => {
         db.run('PRAGMA foreign_keys = ON;');
 
@@ -39,8 +39,8 @@ function initializeTables(){
             name TEXT NOT NULL,
             description TEXT,
             price REAL NOT NULL,
-            image_url TEXT,           -- 商品图片
-            stock INTEGER DEFAULT 0,  -- 库存
+            image_url TEXT,
+            stock INTEGER DEFAULT 0,
             user_id INTEGER,
             FOREIGN KEY (user_id) REFERENCES users(id)
         )`, (err) => {
@@ -56,7 +56,8 @@ function initializeTables(){
             user_id INTEGER,
             product_id INTEGER,
             quantity INTEGER NOT NULL,
-            order_date TEXT NOT NULL,
+            total_price REAL NOT NULL,
+            order_date TEXT DEFAULT CURRENT_TIMESTAMP,
             FOREIGN KEY (user_id) REFERENCES users(id),
             FOREIGN KEY (product_id) REFERENCES products(id)
         )`, (err) => {
@@ -66,10 +67,14 @@ function initializeTables(){
                 console.log('Orders table created or already exists.');
             }
         });
-        console.log('Database initialization complete.');
         
-        // 初始化示例数据
-        const { initializeSampleData } = require('./data/sample-data');
-        initializeSampleData();
-    })
+        // 使用 setTimeout 确保所有表都创建完成后再初始化数据
+        setTimeout(() => {
+            console.log('Database initialization complete.');
+            const { initializeSampleData } = require('./data/sample-data');
+            initializeSampleData();
+        }, 100);
+    });
 }
+
+module.exports = db;

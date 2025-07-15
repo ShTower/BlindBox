@@ -1,88 +1,67 @@
 const express = require('express');
+const router = express.Router();
 const Order = require('../models/order');
 const Product = require('../models/product');
-const router = express.Router();
+const { checkAuthenticated } = require('../middleware/auth');
 
-// 获取用户订单列表
-router.get('/user/:userId', async (req, res) => {
+// 创建订单（抽取盲盒）
+router.post('/', checkAuthenticated, async (req, res) => {
     try {
-        const orders = await Order.findByUserId(req.params.userId);
-        res.json({ orders });
-    } catch (error) {
-        console.error('获取订单列表错误:', error);
-        res.status(500).json({ error: '服务器错误' });
-    }
-});
+        const { product_id, quantity = 1 } = req.body;
+        const user_id = req.user.id;
 
-// 创建新订单（盲盒抽取）
-router.post('/', async (req, res) => {
-    try {
-        const { user_id, product_id, quantity = 1 } = req.body;
-        
-        // 获取产品信息
+        // 验证产品存在
         const product = await Product.findById(product_id);
         if (!product) {
-            return res.status(404).json({ error: '盲盒不存在' });
+            return res.status(404).json({ error: 'Product not found' });
         }
-        
+
         // 检查库存
         if (product.stock < quantity) {
-            return res.status(400).json({ error: '库存不足' });
+            return res.status(400).json({ error: 'Insufficient stock' });
         }
-        
+
         // 计算总价
         const total_price = product.price * quantity;
-        
+
         // 创建订单
         const order = await Order.create({
             user_id,
             product_id,
             quantity,
-            total_price
+            total_price,
+            order_date: new Date().toISOString()
         });
-        
+
         // 更新库存
         await Product.updateStock(product_id, product.stock - quantity);
-        
+
         res.status(201).json({
-            message: '盲盒抽取成功',
-            order,
-            product: {
-                id: product.id,
-                name: product.name,
-                price: product.price,
-                image_url: product.image_url
+            message: 'Order created successfully',
+            order: {
+                id: order.id,
+                product: product,
+                quantity: quantity,
+                total_price: total_price,
+                order_date: order.order_date
             }
         });
     } catch (error) {
-        console.error('创建订单错误:', error);
-        res.status(500).json({ error: '服务器错误' });
+        console.error('Order creation error:', error);
+        res.status(500).json({ error: 'Internal server error', details: error.message });
     }
 });
 
-// 获取订单详情
-router.get('/:id', async (req, res) => {
+// 获取用户订单
+router.get('/', checkAuthenticated, async (req, res) => {
     try {
-        const order = await Order.findById(req.params.id);
-        if (!order) {
-            return res.status(404).json({ error: '订单不存在' });
-        }
-        res.json({ order });
+        const user_id = req.user.id;
+        const orders = await Order.findByUserId(user_id);
+        res.json(orders);
     } catch (error) {
-        console.error('获取订单详情错误:', error);
-        res.status(500).json({ error: '服务器错误' });
+        console.error('Get orders error:', error);
+        res.status(500).json({ error: 'Internal server error', details: error.message });
     }
 });
 
-// 获取所有订单（管理员功能）
-router.get('/', async (req, res) => {
-    try {
-        const orders = await Order.findAll();
-        res.json({ orders });
-    } catch (error) {
-        console.error('获取所有订单错误:', error);
-        res.status(500).json({ error: '服务器错误' });
-    }
-});
-
-module.exports = router; 
+module.exports = router;
