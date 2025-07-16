@@ -2,11 +2,11 @@ const db = require('../database');
 
 const Order = {
     create : async (orderData) => {
-        const { user_id, product_id, quantity, total_price } = orderData;
+        const { user_id, product_id, quantity, total_price, order_date } = orderData;
         return new Promise((resolve, reject) => {
             db.run(
-                'INSERT INTO orders (user_id, product_id, quantity, total_price) VALUES (?, ?, ?, ?)',
-                [user_id, product_id, quantity, total_price],
+                'INSERT INTO orders (user_id, product_id, quantity, total_price, order_date) VALUES (?, ?, ?, ?, ?)',
+                [user_id, product_id, quantity, total_price, order_date],
                 function(err) {
                     if (err) {
                         return reject(err);

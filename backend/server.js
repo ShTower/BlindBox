@@ -28,6 +28,13 @@ app.set('view engine', 'ejs')
 app.use(express.json()) // 支持JSON请求体
 app.use(express.urlencoded({ extended: false }))
 app.use(flash())
+
+// CORS配置 - 必须在session之前
+app.use(cors({
+    origin: process.env.FRONTEND_URL || 'http://localhost:5173',
+    credentials: true
+}))
+
 app.use(session({
     secret: process.env.SESSION_SECRET || 'your-secret-key',
     resave: false,
@@ -37,12 +44,6 @@ app.use(session({
         httpOnly: true,
         maxAge: 24 * 60 * 60 * 1000 // 24小时
     }
-}))
-
-// CORS配置
-app.use(cors({
-    origin: process.env.FRONTEND_URL || 'http://localhost:5173',
-    credentials: true
 }))
 
 app.use(passport.initialize())

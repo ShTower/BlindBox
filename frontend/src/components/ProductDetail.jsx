@@ -45,17 +45,24 @@ const ProductDetail = () => {
 
         setDrawing(true);
         try {
+            console.log('发送抽取请求:', {
+                product_id: product.id,
+                quantity: quantity
+            });
+            
             const response = await orderAPI.createOrder({
-                user_id: user.id,
                 product_id: product.id,
                 quantity: quantity
             });
 
+            console.log('抽取成功:', response.data);
             alert('盲盒抽取成功！');
             // 刷新产品信息以更新库存
             fetchProduct();
         } catch (error) {
-            alert(error.response?.data?.error || '抽取失败');
+            console.error('抽取失败:', error);
+            console.error('错误详情:', error.response?.data);
+            alert(error.response?.data?.error || error.response?.data?.details || '抽取失败');
         } finally {
             setDrawing(false);
         }

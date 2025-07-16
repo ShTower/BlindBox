@@ -67,13 +67,34 @@ function initializeTables() {
                 console.log('Orders table created or already exists.');
             }
         });
+
+        // 检查并添加缺失的字段
+        db.run(`ALTER TABLE orders ADD COLUMN total_price REAL`, (err) => {
+            if (err) {
+                // 如果字段已存在，会报错，我们忽略这个错误
+                if (err.message.includes('duplicate column name')) {
+                    console.log('total_price column already exists');
+                } else {
+                    console.log('Added total_price column to orders table');
+                }
+            } else {
+                console.log('Added total_price column to orders table');
+            }
+        });
+
+        // 检查并修改 order_date 字段默认值
+        db.run(`UPDATE orders SET order_date = CURRENT_TIMESTAMP WHERE order_date IS NULL`, (err) => {
+            if (err) {
+                console.error('Error updating order_date:', err.message);
+            }
+        });
         
         // 使用 setTimeout 确保所有表都创建完成后再初始化数据
         setTimeout(() => {
             console.log('Database initialization complete.');
             const { initializeSampleData } = require('./data/sample-data');
             initializeSampleData();
-        }, 100);
+        }, 200);
     });
 }
 

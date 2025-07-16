@@ -7,17 +7,24 @@ const { checkAuthenticated } = require('../middleware/auth');
 // 创建订单（抽取盲盒）
 router.post('/', checkAuthenticated, async (req, res) => {
     try {
+        console.log('创建订单请求:', req.body);
+        console.log('当前用户:', req.user);
+        
         const { product_id, quantity = 1 } = req.body;
         const user_id = req.user.id;
 
         // 验证产品存在
         const product = await Product.findById(product_id);
         if (!product) {
+            console.log('产品不存在:', product_id);
             return res.status(404).json({ error: 'Product not found' });
         }
 
+        console.log('找到产品:', product);
+
         // 检查库存
         if (product.stock < quantity) {
+            console.log('库存不足:', product.stock, '<', quantity);
             return res.status(400).json({ error: 'Insufficient stock' });
         }
 
@@ -25,16 +32,22 @@ router.post('/', checkAuthenticated, async (req, res) => {
         const total_price = product.price * quantity;
 
         // 创建订单
-        const order = await Order.create({
+        const orderData = {
             user_id,
             product_id,
             quantity,
             total_price,
             order_date: new Date().toISOString()
-        });
+        };
+
+        console.log('创建订单数据:', orderData);
+
+        const order = await Order.create(orderData);
+        console.log('订单创建成功:', order);
 
         // 更新库存
         await Product.updateStock(product_id, product.stock - quantity);
+        console.log('库存更新成功');
 
         res.status(201).json({
             message: 'Order created successfully',
