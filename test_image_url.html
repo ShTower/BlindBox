@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>图片URL测试</title>
+</head>
+<body>
+    <h1>图片URL测试</h1>
+    <h2>直接访问图片</h2>
+    <img src="http://localhost:3000/uploads/1752716311235-842157137.png" alt="测试图片1" style="width: 200px; height: 200px; object-fit: cover;">
+    <img src="http://localhost:3000/uploads/1752716592127-808815835.png" alt="测试图片2" style="width: 200px; height: 200px; object-fit: cover;">
+    <img src="http://localhost:3000/uploads/1752718701968-869595975.png" alt="测试图片3" style="width: 200px; height: 200px; object-fit: cover;">
+    
+    <h2>图片路径测试</h2>
+    <script>
+        // 测试图片路径处理函数
+        function getImageUrl(imageUrl) {
+            if (!imageUrl) return null;
+            
+            // 如果是相对路径（以 /uploads 开头），添加后端服务器地址
+            if (imageUrl.startsWith('/uploads')) {
+                return `http://localhost:3000${imageUrl}`;
+            }
+            
+            // 如果是完整URL，直接返回
+            if (imageUrl.startsWith('http')) {
+                return imageUrl;
+            }
+            
+            // 其他情况，假设是相对路径
+            return `http://localhost:3000/uploads/${imageUrl}`;
+        }
+        
+        // 测试各种路径格式
+        const testUrls = [
+            '/uploads/1752716311235-842157137.png',
+            'http://localhost:3000/uploads/1752716311235-842157137.png',
+            '1752716311235-842157137.png'
+        ];
+        
+        testUrls.forEach(url => {
+            console.log(`Input: ${url} -> Output: ${getImageUrl(url)}`);
+        });
+    </script>
+</body>
+</html>

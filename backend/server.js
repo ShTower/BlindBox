@@ -52,7 +52,10 @@ app.use(passport.initialize())
 app.use(passport.session())
 
 // 静态文件服务 - 用于提供上传的图片
-app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
+app.use('/uploads', (req, res, next) => {
+    console.log('静态文件请求:', req.path);
+    next();
+}, express.static(path.join(__dirname, 'uploads')));
 
 // API路由
 app.use('/api/auth', authRoutes);

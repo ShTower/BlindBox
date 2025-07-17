@@ -111,7 +111,15 @@ router.post('/upload', checkAuthenticated, upload.single('image'), (req, res) =>
             });
         }
 
+        // 返回完整的图片URL路径
         const imageUrl = `/uploads/${req.file.filename}`;
+        
+        console.log('图片上传成功:', {
+            filename: req.file.filename,
+            path: req.file.path,
+            imageUrl: imageUrl
+        });
+        
         res.json({
             success: true,
             data: {

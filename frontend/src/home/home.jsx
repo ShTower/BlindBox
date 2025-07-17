@@ -52,12 +52,6 @@ const Home = () => {
                             <li><Link to="/home/products">盲盒列表</Link></li>
                             <li><Link to="/home/orders">我的订单</Link></li>
                             <li><Link to="/home/show">玩家秀</Link></li>
-                            <li>
-                                <div className="search-box">
-                                    <input type="text" placeholder="搜索商品..." />
-                                    <button>搜索</button>
-                                </div>
-                            </li>
                         </ul>
                     </nav>
                 </aside>

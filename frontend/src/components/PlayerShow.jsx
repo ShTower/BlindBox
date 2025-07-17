@@ -12,10 +12,8 @@ const PlayerShow = () => {
     const [form, setForm] = useState({ title: '', content: '', image: null });
     const [uploading, setUploading] = useState(false);
     const [submitMsg, setSubmitMsg] = useState('');
-    const [expandedShows, setExpandedShows] = useState(new Set());
-    const [commentForms, setCommentForms] = useState({});
-    const [showComments, setShowComments] = useState({});
     const [showLikes, setShowLikes] = useState({});
+    const [imageErrors, setImageErrors] = useState({});
     const fileInputRef = useRef();
 
     useEffect(() => {
@@ -59,6 +57,15 @@ const PlayerShow = () => {
         }
     };
 
+    const handleImageError = (showId, imageUrl) => {
+        console.error('图片加载失败:', imageUrl);
+        setImageErrors(prev => ({ ...prev, [showId]: true }));
+    };
+
+    const handleImageLoad = (imageUrl) => {
+        console.log('图片加载成功:', imageUrl);
+    };
+
     const handleSubmit = async (e) => {
         e.preventDefault();
         if (!user) {
@@ -72,7 +79,12 @@ const PlayerShow = () => {
                 const formData = new FormData();
                 formData.append('image', form.image);
                 const uploadRes = await playerShowAPI.uploadImage(formData);
-                imageUrl = uploadRes.data.imageUrl;
+                console.log('图片上传响应:', uploadRes.data);
+                if (uploadRes.data && uploadRes.data.success) {
+                    imageUrl = uploadRes.data.data.imageUrl;
+                } else {
+                    throw new Error('图片上传失败');
+                }
             }
             await playerShowAPI.create({
                 user_id: user.id,
@@ -89,51 +101,6 @@ const PlayerShow = () => {
             setSubmitMsg('发表失败，请重试');
         } finally {
             setUploading(false);
-        }
-    };
-
-    const toggleExpanded = (showId) => {
-        setExpandedShows(prev => {
-            const newSet = new Set(prev);
-            if (newSet.has(showId)) {
-                newSet.delete(showId);
-            } else {
-                newSet.add(showId);
-                if (!showComments[showId]) fetchComments(showId);
-            }
-            return newSet;
-        });
-    };
-
-    const fetchComments = async (showId) => {
-        try {
-            const res = await playerShowAPI.getComments(showId);
-            if (res.success && res.data && res.data.comments) {
-                setShowComments(prev => ({ ...prev, [showId]: res.data.comments }));
-            }
-        } catch (err) {
-            console.error('获取评论失败:', err);
-        }
-    };
-
-    const handleCommentSubmit = async (showId) => {
-        if (!user) {
-            alert('请先登录后再评论');
-            return;
-        }
-        const content = commentForms[showId];
-        if (!content?.trim()) return;
-        
-        try {
-            const res = await playerShowAPI.addComment(showId, { content });
-            if (res.success) {
-                setCommentForms(prev => ({ ...prev, [showId]: '' }));
-                fetchComments(showId);
-                fetchShows(); // 刷新评论数
-            }
-        } catch (err) {
-            console.error('评论失败:', err);
-            alert('评论失败，请重试');
         }
     };
 
@@ -184,6 +151,23 @@ const PlayerShow = () => {
         }
     };
 
+    const getImageUrl = (imageUrl) => {
+        if (!imageUrl) return null;
+        
+        // 如果是相对路径（以 /uploads 开头），添加后端服务器地址
+        if (imageUrl.startsWith('/uploads')) {
+            return `http://localhost:3000${imageUrl}`;
+        }
+        
+        // 如果是完整URL，直接返回
+        if (imageUrl.startsWith('http')) {
+            return imageUrl;
+        }
+        
+        // 其他情况，假设是相对路径
+        return `http://localhost:3000/uploads/${imageUrl}`;
+    };
+
     if (loading) {
         return (
             <div className="player-show-container">
@@ -227,9 +211,19 @@ const PlayerShow = () => {
                                     <span className="show-time">{new Date(show.created_at).toLocaleString('zh-CN')}</span>
                                 </div>
                                 <div className="show-product">
-                                    {show.image_url && (
+                                    {show.image_url && !imageErrors[show.id] && (
                                         <div className="product-image">
-                                            <img src={show.image_url.startsWith('/uploads') ? `http://localhost:3000${show.image_url}` : show.image_url} alt="玩家秀" />
+                                            <img 
+                                                src={getImageUrl(show.image_url)} 
+                                                alt="玩家秀" 
+                                                onError={() => handleImageError(show.id, show.image_url)}
+                                                onLoad={() => handleImageLoad(show.image_url)}
+                                            />
+                                        </div>
+                                    )}
+                                    {show.image_url && imageErrors[show.id] && (
+                                        <div className="product-image error">
+                                            <span>图片加载失败</span>
                                         </div>
                                     )}
                                     <div className="product-info">
@@ -238,44 +232,10 @@ const PlayerShow = () => {
                                     </div>
                                 </div>
                                 <div className="show-footer">
-                                    <button onClick={() => toggleExpanded(show.id)}>
-                                        评论 ({show.comments_count || 0})
-                                    </button>
                                     <button onClick={() => handleLike(show.id)}>
                                         {showLikes[show.id] ? '❤️' : '🤍'} 点赞({show.likes_count || 0})
                                     </button>
                                 </div>
-                                {expandedShows.has(show.id) && (
-                                    <div className="show-details">
-                                        <div className="comments-section">
-                                            <h4>评论</h4>
-                                            {showComments[show.id] ? (
-                                                <div className="comments-list">
-                                                    {showComments[show.id].map(comment => (
-                                                        <div key={comment.id} className="comment-item">
-                                                            <span className="comment-author">{comment.username}</span>
-                                                            <span className="comment-content">{comment.content}</span>
-                                                            <span className="comment-time">{new Date(comment.created_at).toLocaleString('zh-CN')}</span>
-                                                        </div>
-                                                    ))}
-                                                </div>
-                                            ) : (
-                                                <button onClick={() => fetchComments(show.id)}>加载评论</button>
-                                            )}
-                                            {user && (
-                                                <div className="comment-form">
-                                                    <input
-                                                        type="text"
-                                                        placeholder="发表评论..."
-                                                        value={commentForms[show.id] || ''}
-                                                        onChange={(e) => setCommentForms(prev => ({ ...prev, [show.id]: e.target.value }))}
-                                                    />
-                                                    <button onClick={() => handleCommentSubmit(show.id)}>发送</button>
-                                                </div>
-                                            )}
-                                        </div>
-                                    </div>
-                                )}
                             </div>
                         ))}
                     </div>

@@ -19,17 +19,26 @@ const ProductList = () => {
     const fetchProducts = async () => {
         try {
             setLoading(true);
+            setError(''); // 清除之前的错误
             const params = {
                 page: currentPage,
                 limit: 12,
                 search: searchTerm
             };
             const response = await productAPI.getAll(params);
-            setProducts(response.data.products);
-            setPagination(response.data.pagination);
+            
+            // 确保数据结构正确并去重
+            const productsData = response.data.products || [];
+            const uniqueProducts = productsData.filter((product, index, self) => 
+                index === self.findIndex(p => p.id === product.id)
+            );
+            
+            setProducts(uniqueProducts);
+            setPagination(response.data.pagination || {});
         } catch (error) {
             setError('获取盲盒列表失败');
             console.error('获取产品列表错误:', error);
+            setProducts([]); // 错误时清空产品列表
         } finally {
             setLoading(false);
         }
@@ -38,7 +47,7 @@ const ProductList = () => {
     const handleSearch = (e) => {
         e.preventDefault();
         setCurrentPage(1);
-        fetchProducts();
+        // 不需要手动调用 fetchProducts，因为 useEffect 会监听 currentPage 的变化
     };
 
     const handleProductClick = (productId) => {
@@ -108,7 +117,7 @@ const ProductList = () => {
                 ))}
             </div>
 
-            {products.length === 0 && (
+            {products.length === 0 && !loading && (
                 <div className="no-products">
                     <p>暂无盲盒</p>
                 </div>
@@ -139,4 +148,4 @@ const ProductList = () => {
     );
 };
 
-export default ProductList; 
+export default ProductList;
