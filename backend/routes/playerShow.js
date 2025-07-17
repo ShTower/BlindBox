@@ -41,9 +41,11 @@ const upload = multer({
 router.get('/', async (req, res) => {
     try {
         const { limit = 20, offset = 0 } = req.query;
+        const userId = req.user ? req.user.id : null;
         const shows = await PlayerShow.findAll({ 
             limit: parseInt(limit), 
-            offset: parseInt(offset) 
+            offset: parseInt(offset),
+            userId
         });
         
         res.json({
@@ -67,6 +69,8 @@ router.post('/', checkAuthenticated, async (req, res) => {
         const { title, content, image_url } = req.body;
         const user_id = req.user.id;
 
+        console.log('📝 收到创建玩家秀请求:', { user_id, title, content, image_url });
+
         if (!title || !content) {
             return res.status(400).json({ 
                 success: false, 
@@ -78,8 +82,10 @@ router.post('/', checkAuthenticated, async (req, res) => {
             user_id,
             title,
             content,
-            image_url
+            image_url: image_url || null
         });
+
+        console.log('✅ 玩家秀创建成功:', show);
 
         res.status(201).json({
             success: true,
@@ -87,7 +93,7 @@ router.post('/', checkAuthenticated, async (req, res) => {
             data: { show }
         });
     } catch (error) {
-        console.error('创建玩家秀失败:', error);
+        console.error('❌ 创建玩家秀失败:', error);
         res.status(500).json({ 
             success: false, 
             error: '创建玩家秀失败' 

@@ -1,5 +1,6 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import { authAPI } from '../services/api';
+import { useNavigate } from 'react-router-dom';
 
 const AuthContext = createContext();
 
@@ -14,6 +15,7 @@ export const useAuth = () => {
 export const AuthProvider = ({ children }) => {
     const [user, setUser] = useState(null);
     const [loading, setLoading] = useState(true);
+    const navigate = useNavigate();
 
     useEffect(() => {
         // 检查用户是否已登录
@@ -26,6 +28,9 @@ export const AuthProvider = ({ children }) => {
             setUser(response.data);
         } catch (error) {
             setUser(null);
+            if (error.isAuthError) {
+                navigate('/home/login');
+            }
         } finally {
             setLoading(false);
         }
@@ -37,6 +42,9 @@ export const AuthProvider = ({ children }) => {
             setUser(response.data.user);
             return { success: true };
         } catch (error) {
+            if (error.isAuthError) {
+                navigate('/home/login');
+            }
             return { 
                 success: false, 
                 error: error.response?.data?.error || '登录失败' 
@@ -49,6 +57,9 @@ export const AuthProvider = ({ children }) => {
             const response = await authAPI.register(userData);
             return { success: true, message: response.data.message };
         } catch (error) {
+            if (error.isAuthError) {
+                navigate('/home/login');
+            }
             return { 
                 success: false, 
                 error: error.response?.data?.error || '注册失败' 
@@ -60,8 +71,12 @@ export const AuthProvider = ({ children }) => {
         try {
             await authAPI.logout();
             setUser(null);
+            navigate('/home/login');
             return { success: true };
         } catch (error) {
+            if (error.isAuthError) {
+                navigate('/home/login');
+            }
             return { 
                 success: false, 
                 error: error.response?.data?.error || '登出失败' 

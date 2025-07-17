@@ -3,14 +3,18 @@ const db = require('../database');
 const PlayerShow = {
     create: async (showData) => {
         const { user_id, title, content, image_url } = showData;
+        console.log('📝 创建玩家秀数据:', showData);
+        
         return new Promise((resolve, reject) => {
             db.run(
                 'INSERT INTO player_shows (user_id, title, content, image_url) VALUES (?, ?, ?, ?)',
-                [user_id, title, content, image_url],
+                [user_id, title, content, image_url || null],
                 function(err) {
                     if (err) {
+                        console.error('❌ 创建玩家秀失败:', err);
                         return reject(err);
                     }
+                    console.log('✅ 玩家秀创建成功，ID:', this.lastID);
                     resolve({ id: this.lastID, ...showData });
                 }
             );
@@ -18,11 +22,17 @@ const PlayerShow = {
     },
 
     findAll: async (options = {}) => {
-        const { limit = 20, offset = 0 } = options;
+        const { limit = 20, offset = 0, userId } = options;
+        console.log('🔍 查询玩家秀，参数:', { limit, offset, userId });
         return new Promise((resolve, reject) => {
             const sql = `
                 SELECT 
-                    ps.*,
+                    ps.id,
+                    ps.user_id,
+                    ps.title,
+                    ps.content,
+                    ps.image_url,
+                    ps.created_at,
                     u.username,
                     (SELECT COUNT(*) FROM show_comments WHERE show_id = ps.id) as comments_count,
                     (SELECT COUNT(*) FROM show_likes WHERE show_id = ps.id) as likes_count
@@ -33,9 +43,28 @@ const PlayerShow = {
             `;
             db.all(sql, [limit, offset], (err, rows) => {
                 if (err) {
+                    console.error('❌ 查询玩家秀失败:', err);
                     return reject(err);
                 }
-                resolve(rows);
+                if (userId) {
+                    // 批量查找所有 show id
+                    const showIds = rows.map(r => r.id);
+                    if (showIds.length === 0) {
+                        resolve([]);
+                        return;
+                    }
+                    // 查询该用户点赞了哪些 show
+                    const likeSql = `SELECT show_id FROM show_likes WHERE user_id = ? AND show_id IN (${showIds.map(()=>'?').join(',')})`;
+                    db.all(likeSql, [userId, ...showIds], (likeErr, likeRows) => {
+                        if (likeErr) return reject(likeErr);
+                        const likedSet = new Set(likeRows.map(lr => lr.show_id));
+                        rows.forEach(row => row.user_liked = likedSet.has(row.id));
+                        resolve(rows);
+                    });
+                } else {
+                    rows.forEach(row => row.user_liked = false);
+                    resolve(rows);
+                }
             });
         });
     },

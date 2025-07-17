@@ -29,8 +29,8 @@ api.interceptors.response.use(
     },
     (error) => {
         if (error.response?.status === 401) {
-            // 未授权，重定向到登录页
-            window.location.href = '/home/login';
+            // 不再直接跳转，抛出特殊标记
+            error.isAuthError = true;
         }
         return Promise.reject(error);
     }
@@ -68,10 +68,10 @@ export const playerShowAPI = {
     getById: (id) => api.get(`/player-shows/${id}`),
     create: (data) => api.post('/player-shows', data),
     uploadImage: (formData) => api.post('/player-shows/upload', formData, { headers: { 'Content-Type': 'multipart/form-data' } }),
-    addComment: (showId, data) => api.post(`/player-shows/${showId}/comment`, data),
+    addComment: (showId, data) => api.post(`/player-shows/${showId}/comments`, data),
     getComments: (showId) => api.get(`/player-shows/${showId}/comments`),
-    like: (showId, data) => api.post(`/player-shows/${showId}/like`, data),
-    unlike: (showId, data) => api.post(`/player-shows/${showId}/unlike`, data),
+    like: (showId) => api.post(`/player-shows/${showId}/like`),
+    unlike: (showId) => api.delete(`/player-shows/${showId}/like`),
 };
 
 // 健康检查

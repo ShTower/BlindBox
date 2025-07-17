@@ -27,10 +27,18 @@ const PlayerShow = () => {
             setLoading(true);
             setError(''); // 清除之前的错误
             const res = await playerShowAPI.getAll({ limit: 20 });
-            
-            // 检查响应结构
-            if (res.success && res.data && res.data.shows) {
-                setShows(res.data.shows);
+            // 修正：正确解析axios返回结构
+            if (res.data && res.data.success && res.data.data && res.data.data.shows) {
+                setShows(res.data.data.shows);
+                
+                // 获取用户的点赞状态
+                if (user) {
+                    const likesStatus = {};
+                    res.data.data.shows.forEach(show => {
+                        likesStatus[show.id] = show.user_liked || false;
+                    });
+                    setShowLikes(likesStatus);
+                }
             } else {
                 setShows([]);
             }
@@ -134,19 +142,45 @@ const PlayerShow = () => {
             alert('请先登录后再点赞');
             return;
         }
-        
+        const isLiked = showLikes[showId];
+        // 本地更新点赞状态和数量
+        setShowLikes(prev => ({ ...prev, [showId]: !isLiked }));
+        setShows(prevShows => prevShows.map(show =>
+            show.id === showId
+                ? { ...show, likes_count: show.likes_count + (isLiked ? -1 : 1) }
+                : show
+        ));
         try {
-            const isLiked = showLikes[showId];
+            let res;
             if (isLiked) {
-                await playerShowAPI.unlike(showId);
+                res = await playerShowAPI.unlike(showId);
             } else {
-                await playerShowAPI.like(showId);
+                res = await playerShowAPI.like(showId);
             }
-            setShowLikes(prev => ({ ...prev, [showId]: !isLiked }));
-            fetchShows(); // 刷新点赞数
+            if (!(res.data && res.data.success)) {
+                // 回滚本地状态
+                setShowLikes(prev => ({ ...prev, [showId]: isLiked }));
+                setShows(prevShows => prevShows.map(show =>
+                    show.id === showId
+                        ? { ...show, likes_count: show.likes_count + (isLiked ? 1 : -1) }
+                        : show
+                ));
+                alert('操作失败，请重试');
+            }
         } catch (err) {
-            console.error('点赞操作失败:', err);
-            alert('操作失败，请重试');
+            setShowLikes(prev => ({ ...prev, [showId]: isLiked }));
+            setShows(prevShows => prevShows.map(show =>
+                show.id === showId
+                    ? { ...show, likes_count: show.likes_count + (isLiked ? 1 : -1) }
+                    : show
+            ));
+            if (err.response?.status === 409) {
+                fetchShows();
+            } else if (err.response?.status === 401) {
+                alert('请重新登录');
+            } else {
+                alert('操作失败，请重试');
+            }
         }
     };
 
