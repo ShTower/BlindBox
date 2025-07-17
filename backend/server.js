@@ -9,11 +9,13 @@ const passport = require('passport')
 const flash = require('express-flash')
 const session = require('express-session')
 const cors = require('cors')
+const path = require('path')
 
 // 导入路由
 const authRoutes = require('./routes/auth');
 const productRoutes = require('./routes/products');
 const orderRoutes = require('./routes/orders');
+const playerShowRoutes = require('./routes/playerShow'); // 添加玩家秀路由
 
 const initializePassport = require('./passport-config')
 initializePassport(
@@ -49,10 +51,14 @@ app.use(session({
 app.use(passport.initialize())
 app.use(passport.session())
 
+// 静态文件服务 - 用于提供上传的图片
+app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
+
 // API路由
 app.use('/api/auth', authRoutes);
 app.use('/api/products', productRoutes);
 app.use('/api/orders', orderRoutes);
+app.use('/api/player-shows', playerShowRoutes); // 注册玩家秀路由
 
 // 健康检查
 app.get('/api/health', (req, res) => {

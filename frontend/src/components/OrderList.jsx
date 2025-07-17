@@ -18,27 +18,50 @@ const OrderList = () => {
     const fetchOrders = async () => {
         try {
             setLoading(true);
+            setError(''); // 清除之前的错误
+            
             const response = await orderAPI.getUserOrders(user.id);
+            console.log('API响应:', response.data); // 调试日志
+            
+            // 修复：直接使用response.data，因为后端返回的就是订单数组
+            const ordersData = response.data || [];
+            
             const ordersWithProducts = await Promise.all(
-                response.data.orders.map(async (order) => {
+                ordersData.map(async (order) => {
                     try {
                         const productResponse = await productAPI.getById(order.product_id);
                         return {
                             ...order,
-                            product: productResponse.data.product
+                            product: productResponse.data.product || productResponse.data
                         };
                     } catch (error) {
+                        console.error('获取产品信息失败:', error);
                         return {
                             ...order,
-                            product: { name: '未知产品', price: 0 }
+                            product: { 
+                                name: '未知产品', 
+                                price: 0,
+                                description: '产品信息获取失败'
+                            }
                         };
                     }
                 })
             );
+            
             setOrders(ordersWithProducts);
         } catch (error) {
-            setError('获取订单列表失败');
             console.error('获取订单列表错误:', error);
+            
+            // 提供更详细的错误信息
+            if (error.response?.status === 404) {
+                setError('订单API不存在，请检查后端服务');
+            } else if (error.response?.status === 401) {
+                setError('未授权，请重新登录');
+            } else if (error.response?.status === 403) {
+                setError('权限不足');
+            } else {
+                setError('获取订单列表失败，请稍后重试');
+            }
         } finally {
             setLoading(false);
         }
@@ -70,7 +93,12 @@ const OrderList = () => {
     if (error) {
         return (
             <div className="order-list-container">
-                <div className="error">{error}</div>
+                <div className="error">
+                    {error}
+                    <button onClick={fetchOrders} style={{ marginLeft: '10px' }}>
+                        重试
+                    </button>
+                </div>
             </div>
         );
     }
@@ -97,7 +125,7 @@ const OrderList = () => {
                             
                             <div className="order-product">
                                 <div className="product-image">
-                                    {order.product.image_url ? (
+                                    {order.product?.image_url ? (
                                         <img 
                                             src={order.product.image_url} 
                                             alt={order.product.name} 
@@ -111,10 +139,10 @@ const OrderList = () => {
                                 
                                 <div className="product-info">
                                     <h3 className="product-name">
-                                        {order.product.name}
+                                        {order.product?.name || '未知产品'}
                                     </h3>
                                     <p className="product-description">
-                                        {order.product.description}
+                                        {order.product?.description || '暂无描述'}
                                     </p>
                                 </div>
                             </div>
@@ -126,7 +154,7 @@ const OrderList = () => {
                                 </div>
                                 <div className="detail-item">
                                     <span className="detail-label">单价:</span>
-                                    <span className="detail-value">¥{order.product.price}</span>
+                                    <span className="detail-value">¥{order.product?.price || 0}</span>
                                 </div>
                                 <div className="detail-item total">
                                     <span className="detail-label">总价:</span>
@@ -141,4 +169,4 @@ const OrderList = () => {
     );
 };
 
-export default OrderList; 
+export default OrderList;

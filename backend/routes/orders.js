@@ -77,4 +77,22 @@ router.get('/', checkAuthenticated, async (req, res) => {
     }
 });
 
+// 添加新的路由：通过用户ID获取订单列表
+router.get('/user/:userId', checkAuthenticated, async (req, res) => {
+    try {
+        const { userId } = req.params;
+        
+        // 检查用户是否有权限访问这些订单（只能访问自己的订单）
+        if (parseInt(userId) !== req.user.id) {
+            return res.status(403).json({ error: 'Forbidden: You can only access your own orders' });
+        }
+        
+        const orders = await Order.findByUserId(userId);
+        res.json(orders);
+    } catch (error) {
+        console.error('Get user orders error:', error);
+        res.status(500).json({ error: 'Internal server error', details: error.message });
+    }
+});
+
 module.exports = router;

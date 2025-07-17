@@ -68,6 +68,61 @@ function initializeTables() {
             }
         });
 
+        // 创建玩家秀表
+        db.run(`CREATE TABLE IF NOT EXISTS player_shows (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            user_id INTEGER NOT NULL,
+            title TEXT NOT NULL,
+            content TEXT,
+            image_url TEXT,
+            order_id INTEGER,
+            created_at TEXT DEFAULT CURRENT_TIMESTAMP,
+            updated_at TEXT DEFAULT CURRENT_TIMESTAMP,
+            likes_count INTEGER DEFAULT 0,
+            FOREIGN KEY (user_id) REFERENCES users(id),
+            FOREIGN KEY (order_id) REFERENCES orders(id)
+        )`, (err) => {
+            if (err) {
+                console.error('Error creating player_shows table:', err.message);
+            } else {
+                console.log('Player_shows table created or already exists.');
+            }
+        });
+
+        // 创建评论表
+        db.run(`CREATE TABLE IF NOT EXISTS show_comments (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            show_id INTEGER NOT NULL,
+            user_id INTEGER NOT NULL,
+            content TEXT NOT NULL,
+            created_at TEXT DEFAULT CURRENT_TIMESTAMP,
+            FOREIGN KEY (show_id) REFERENCES player_shows(id) ON DELETE CASCADE,
+            FOREIGN KEY (user_id) REFERENCES users(id)
+        )`, (err) => {
+            if (err) {
+                console.error('Error creating show_comments table:', err.message);
+            } else {
+                console.log('Show_comments table created or already exists.');
+            }
+        });
+
+        // 创建点赞表
+        db.run(`CREATE TABLE IF NOT EXISTS show_likes (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            show_id INTEGER NOT NULL,
+            user_id INTEGER NOT NULL,
+            created_at TEXT DEFAULT CURRENT_TIMESTAMP,
+            UNIQUE(show_id, user_id),
+            FOREIGN KEY (show_id) REFERENCES player_shows(id) ON DELETE CASCADE,
+            FOREIGN KEY (user_id) REFERENCES users(id)
+        )`, (err) => {
+            if (err) {
+                console.error('Error creating show_likes table:', err.message);
+            } else {
+                console.log('Show_likes table created or already exists.');
+            }
+        });
+
         // 检查并添加缺失的字段
         db.run(`ALTER TABLE orders ADD COLUMN total_price REAL`, (err) => {
             if (err) {

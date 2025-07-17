@@ -62,6 +62,18 @@ export const orderAPI = {
     getAllOrders: () => api.get('/orders'),
 };
 
+// 玩家秀相关API
+export const playerShowAPI = {
+    getAll: (params) => api.get('/player-shows', { params }),
+    getById: (id) => api.get(`/player-shows/${id}`),
+    create: (data) => api.post('/player-shows', data),
+    uploadImage: (formData) => api.post('/player-shows/upload', formData, { headers: { 'Content-Type': 'multipart/form-data' } }),
+    addComment: (showId, data) => api.post(`/player-shows/${showId}/comment`, data),
+    getComments: (showId) => api.get(`/player-shows/${showId}/comments`),
+    like: (showId, data) => api.post(`/player-shows/${showId}/like`, data),
+    unlike: (showId, data) => api.post(`/player-shows/${showId}/unlike`, data),
+};
+
 // 健康检查
 export const healthCheck = () => api.get('/health');
 
