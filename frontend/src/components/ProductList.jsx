@@ -118,11 +118,13 @@ const ProductList = () => {
                         <div className="product-info">
                             <h3 className="product-name">{product.name}</h3>
                             <p className="product-description">{product.description}</p>
-                            <div className="product-price">
-                                ¥{product.price}
-                            </div>
-                            <div className="product-stock">
-                                库存: {product.stock}
+                            <div className="product-bottom">
+                                <div className="product-price">
+                                    ¥{product.price}
+                                </div>
+                                <div className="product-stock">
+                                    库存: {product.stock}
+                                </div>
                             </div>
                         </div>
                     </div>

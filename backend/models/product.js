@@ -96,6 +96,66 @@ const Product = {
                 }
             });
         });
+    },
+
+    deleteWithRelated: (id) => {
+        return new Promise((resolve, reject) => {
+            db.serialize(() => {
+                db.run('BEGIN TRANSACTION');
+                
+                // 1. 删除相关的抽取结果（通过订单）
+                db.run(`DELETE FROM draw_results 
+                        WHERE order_id IN (SELECT id FROM orders WHERE product_id = ?)`, 
+                        [id], (err) => {
+                    if (err) {
+                        db.run('ROLLBACK');
+                        return reject(err);
+                    }
+                });
+                
+                // 2. 删除相关的玩家秀（通过订单）
+                db.run(`DELETE FROM player_shows 
+                        WHERE order_id IN (SELECT id FROM orders WHERE product_id = ?)`, 
+                        [id], (err) => {
+                    if (err) {
+                        db.run('ROLLBACK');
+                        return reject(err);
+                    }
+                });
+                
+                // 3. 删除相关的订单
+                db.run('DELETE FROM orders WHERE product_id = ?', [id], (err) => {
+                    if (err) {
+                        db.run('ROLLBACK');
+                        return reject(err);
+                    }
+                });
+                
+                // 4. 删除相关的盲盒物品（这个有CASCADE，但为了保险起见）
+                db.run('DELETE FROM blindbox_items WHERE product_id = ?', [id], (err) => {
+                    if (err) {
+                        db.run('ROLLBACK');
+                        return reject(err);
+                    }
+                });
+                
+                // 5. 最后删除产品本身
+                db.run('DELETE FROM products WHERE id = ?', [id], function(err) {
+                    if (err) {
+                        db.run('ROLLBACK');
+                        reject(err);
+                    } else {
+                        db.run('COMMIT', (commitErr) => {
+                            if (commitErr) {
+                                reject(commitErr);
+                            } else {
+                                resolve({ changes: this.changes });
+                            }
+                        });
+                    }
+                });
+            });
+        });
     }
 };
 

@@ -36,12 +36,17 @@
   gap: 20px;
 }
 
+/* 订单卡片整体样式优化 */
 .order-card {
   background: white;
   border-radius: 15px;
   box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
   overflow: hidden;
   transition: transform 0.3s ease, box-shadow 0.3s ease;
+  display: flex;
+  flex-direction: column;
+  height: auto;
+  min-height: 350px; /* 设置最小高度确保一致性 */
 }
 
 .order-card:hover {
@@ -77,17 +82,45 @@
   opacity: 0.9;
 }
 
+/* 通用图片样式 */
+.product-image img,
+.product-image-small img,
+.result-image-large img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: center;
+  border-radius: 8px;
+  background-color: #f8f9fa;
+  transition: transform 0.2s ease;
+}
+
+.result-image-large img {
+  border-radius: 12px;
+}
+
+/* 图片加载失败的处理 */
+.product-image img:not([src]),
+.product-image-small img:not([src]),
+.result-image-large img:not([src]) {
+  display: none;
+}
+
 .order-product {
   padding: 20px;
   display: flex;
   gap: 15px;
   border-bottom: 1px solid #eee;
+  align-items: flex-start; /* 确保对齐方式正确 */
+  min-height: 100px; /* 设置最小高度防止塌陷 */
 }
 
 .product-image {
   width: 80px;
   height: 80px;
   flex-shrink: 0;
+  border-radius: 8px;
+  overflow: hidden;
 }
 
 .product-image img {
@@ -112,23 +145,33 @@
 
 .product-info {
   flex: 1;
+  min-width: 0; /* 防止flex项目溢出 */
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
 }
 
 .product-name {
   font-size: 16px;
   font-weight: 600;
-  margin-bottom: 8px;
+  margin: 0 0 8px 0;
   color: #333;
+  word-wrap: break-word;
+  overflow-wrap: break-word;
 }
 
 .product-description {
   color: #666;
   font-size: 14px;
   line-height: 1.4;
+  margin: 0;
   display: -webkit-box;
   -webkit-line-clamp: 2;
+  line-clamp: 2;
   -webkit-box-orient: vertical;
   overflow: hidden;
+  word-wrap: break-word;
+  overflow-wrap: break-word;
 }
 
 .order-details {
@@ -273,6 +316,8 @@
   width: 60px;
   height: 60px;
   flex-shrink: 0;
+  border-radius: 8px;
+  overflow: hidden;
 }
 
 .product-image-small img {
@@ -320,12 +365,14 @@
   margin: 0 auto 15px;
   border-radius: 12px;
   overflow: hidden;
+  flex-shrink: 0;
 }
 
 .result-image-large img {
   width: 100%;
   height: 100%;
   object-fit: cover;
+  display: block;
 }
 
 .placeholder-result-image-large {
@@ -417,13 +464,28 @@
   }
   
   .order-product {
-    flex-direction: column;
-    text-align: center;
+    flex-direction: row; /* 保持横向布局 */
+    align-items: center;
+    gap: 15px;
   }
   
   .product-image {
-    width: 100%;
-    height: 120px;
+    width: 70px;
+    height: 70px;
+    flex-shrink: 0;
+  }
+  
+  .product-info {
+    flex: 1;
+    min-width: 0;
+  }
+  
+  .product-name {
+    font-size: 15px;
+  }
+  
+  .product-description {
+    font-size: 13px;
   }
   
   .order-header {
@@ -453,14 +515,15 @@
   }
 
   .product-summary {
-    flex-direction: column;
-    text-align: center;
+    flex-direction: row; /* 保持横向布局 */
     align-items: center;
+    gap: 15px;
   }
 
   .product-image-small {
-    width: 80px;
-    height: 80px;
+    width: 50px;
+    height: 50px;
+    flex-shrink: 0;
   }
 
   .results-grid {

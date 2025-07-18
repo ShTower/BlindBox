@@ -1,5 +1,6 @@
 const express = require('express');
 const Product = require('../models/product');
+const BlindboxItem = require('../models/blindboxItem');
 const router = express.Router();
 
 // 获取所有盲盒列表
@@ -71,8 +72,49 @@ router.post('/', async (req, res) => {
             image_url
         });
         
+        // 自动为新产品创建默认的盲盒物品
+        const defaultItems = [
+            {
+                product_id: product.id,
+                name: `${name} - 普通奖品`,
+                description: '常见的可爱奖品',
+                image_url: image_url || 'https://via.placeholder.com/200x200?text=Common+Item',
+                rarity: 'common',
+                probability: 0.5
+            },
+            {
+                product_id: product.id,
+                name: `${name} - 稀有奖品`,
+                description: '稀有的精美奖品',
+                image_url: image_url || 'https://via.placeholder.com/200x200?text=Rare+Item',
+                rarity: 'uncommon',
+                probability: 0.3
+            },
+            {
+                product_id: product.id,
+                name: `${name} - 精品奖品`,
+                description: '精美的收藏奖品',
+                image_url: image_url || 'https://via.placeholder.com/200x200?text=Epic+Item',
+                rarity: 'rare',
+                probability: 0.15
+            },
+            {
+                product_id: product.id,
+                name: `${name} - 传说奖品`,
+                description: '极其罕见的传说级奖品',
+                image_url: image_url || 'https://via.placeholder.com/200x200?text=Legend+Item',
+                rarity: 'legendary',
+                probability: 0.05
+            }
+        ];
+
+        // 创建默认盲盒物品
+        for (const itemData of defaultItems) {
+            await BlindboxItem.create(itemData);
+        }
+        
         res.status(201).json({
-            message: '盲盒创建成功',
+            message: '盲盒创建成功，已自动添加默认奖品',
             product
         });
     } catch (error) {
@@ -121,11 +163,12 @@ router.delete('/:id', async (req, res) => {
             return res.status(404).json({ error: '盲盒不存在' });
         }
         
-        await Product.delete(req.params.id);
+        // 删除产品及其相关数据
+        await Product.deleteWithRelated(req.params.id);
         res.json({ message: '盲盒删除成功' });
     } catch (error) {
         console.error('删除产品错误:', error);
-        res.status(500).json({ error: '服务器错误' });
+        res.status(500).json({ error: '服务器错误: ' + error.message });
     }
 });
 

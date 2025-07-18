@@ -82,6 +82,10 @@
   overflow: hidden;
   transition: transform 0.3s ease, box-shadow 0.3s ease;
   cursor: pointer;
+  display: flex;
+  flex-direction: column;
+  height: auto;
+  min-height: 380px; /* 设置最小高度确保一致性 */
 }
 
 .product-card:hover {
@@ -91,15 +95,21 @@
 
 .product-image {
   height: 200px;
+  width: 100%;
   overflow: hidden;
   position: relative;
+  flex-shrink: 0; /* 防止图片区域被压缩 */
+  border-radius: 0; /* 移除内部圆角，保持卡片顶部圆角 */
 }
 
 .product-image img {
   width: 100%;
   height: 100%;
   object-fit: cover;
+  object-position: center;
   transition: transform 0.3s ease;
+  display: block;
+  background-color: #f8f9fa;
 }
 
 .product-card:hover .product-image img {
@@ -116,40 +126,58 @@
   color: white;
   font-size: 18px;
   font-weight: 600;
+  flex-shrink: 0;
 }
 
 .product-info {
   padding: 20px;
+  flex: 1; /* 让信息区域占据剩余空间 */
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
 }
 
 .product-name {
   font-size: 18px;
   font-weight: 600;
-  margin-bottom: 10px;
+  margin: 0 0 10px 0;
   color: #333;
+  word-wrap: break-word;
+  overflow-wrap: break-word;
+  line-height: 1.3;
 }
 
 .product-description {
   color: #666;
-  margin-bottom: 15px;
+  margin: 0 0 15px 0;
   line-height: 1.5;
   display: -webkit-box;
   -webkit-line-clamp: 2;
   line-clamp: 2;
   -webkit-box-orient: vertical;
   overflow: hidden;
+  word-wrap: break-word;
+  overflow-wrap: break-word;
+  flex: 1; /* 让描述占据可用空间 */
+}
+
+/* 为价格和库存信息创建底部区域 */
+.product-bottom {
+  margin-top: auto;
+  padding-top: 10px;
 }
 
 .product-price {
   font-size: 20px;
   font-weight: 700;
   color: #e74c3c;
-  margin-bottom: 5px;
+  margin: 0 0 5px 0;
 }
 
 .product-stock {
   font-size: 14px;
   color: #888;
+  margin: 0;
 }
 
 .no-products {
@@ -192,10 +220,39 @@
   color: #666;
 }
 
+/* 通用图片样式和处理 */
+.product-image img:not([src]) {
+  display: none;
+}
+
 @media (max-width: 768px) {
   .products-grid {
     grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
     gap: 15px;
+  }
+  
+  .product-card {
+    min-height: 350px; /* 移动端稍微降低最小高度 */
+  }
+  
+  .product-image {
+    height: 180px; /* 移动端稍微降低图片高度 */
+  }
+  
+  .product-info {
+    padding: 15px;
+  }
+  
+  .product-name {
+    font-size: 16px;
+  }
+  
+  .product-description {
+    font-size: 14px;
+  }
+  
+  .product-price {
+    font-size: 18px;
   }
   
   .search-form {
