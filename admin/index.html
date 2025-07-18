@@ -1,0 +1,110 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>盲盒管理后台</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div id="app">
+        <header class="header">
+            <h1>🎁 盲盒管理后台</h1>
+            <div class="header-actions">
+                <button id="addProductBtn" class="btn btn-primary">添加新盲盒</button>
+                <button id="refreshBtn" class="btn btn-secondary">刷新</button>
+            </div>
+        </header>
+
+        <main class="main-content">
+            <div class="stats-section">
+                <div class="stat-card">
+                    <h3>总商品数</h3>
+                    <span id="totalProducts">0</span>
+                </div>
+                <div class="stat-card">
+                    <h3>在售商品</h3>
+                    <span id="activeProducts">0</span>
+                </div>
+                <div class="stat-card">
+                    <h3>缺货商品</h3>
+                    <span id="outOfStockProducts">0</span>
+                </div>
+            </div>
+
+            <div class="products-section">
+                <div class="section-header">
+                    <h2>商品列表</h2>
+                    <div class="search-box">
+                        <input type="text" id="searchInput" placeholder="搜索商品...">
+                        <button id="searchBtn" class="btn btn-secondary">搜索</button>
+                    </div>
+                </div>
+                
+                <div class="products-table">
+                    <table id="productsTable">
+                        <thead>
+                            <tr>
+                                <th>ID</th>
+                                <th>图片</th>
+                                <th>名称</th>
+                                <th>价格</th>
+                                <th>库存</th>
+                                <th>状态</th>
+                                <th>操作</th>
+                            </tr>
+                        </thead>
+                        <tbody id="productsTableBody">
+                            <!-- 商品数据将在这里动态生成 -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </main>
+
+        <!-- 添加/编辑商品模态框 -->
+        <div id="productModal" class="modal">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h3 id="modalTitle">添加新盲盒</h3>
+                    <span class="close" id="closeModal">&times;</span>
+                </div>
+                <form id="productForm">
+                    <div class="form-group">
+                        <label for="productName">商品名称</label>
+                        <input type="text" id="productName" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="productDescription">商品描述</label>
+                        <textarea id="productDescription" rows="3"></textarea>
+                    </div>
+                    <div class="form-group">
+                        <label for="productPrice">价格</label>
+                        <input type="number" id="productPrice" step="0.01" min="0" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="productStock">库存</label>
+                        <input type="number" id="productStock" min="0" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="productImage">图片URL</label>
+                        <input type="url" id="productImage" placeholder="https://example.com/image.jpg">
+                    </div>
+                    <div class="form-actions">
+                        <button type="submit" class="btn btn-primary">保存</button>
+                        <button type="button" class="btn btn-secondary" id="cancelBtn">取消</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+
+        <!-- 加载指示器 -->
+        <div id="loading" class="loading">
+            <div class="spinner"></div>
+            <p>加载中...</p>
+        </div>
+    </div>
+
+    <script src="script.js"></script>
+</body>
+</html>

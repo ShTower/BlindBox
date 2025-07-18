@@ -57,6 +57,9 @@ app.use('/uploads', (req, res, next) => {
     next();
 }, express.static(path.join(__dirname, 'uploads')));
 
+// 提供管理员页面静态文件
+app.use('/admin', express.static(path.join(__dirname, '../admin')));
+
 // API路由
 app.use('/api/auth', authRoutes);
 app.use('/api/products', productRoutes);
