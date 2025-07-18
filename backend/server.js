@@ -16,6 +16,7 @@ const authRoutes = require('./routes/auth');
 const productRoutes = require('./routes/products');
 const orderRoutes = require('./routes/orders');
 const playerShowRoutes = require('./routes/playerShow'); // 添加玩家秀路由
+const blindboxItemRoutes = require('./routes/blindboxItems'); // 添加盲盒物品路由
 
 const initializePassport = require('./passport-config')
 initializePassport(
@@ -68,6 +69,7 @@ app.use('/api/auth', authRoutes);
 app.use('/api/products', productRoutes);
 app.use('/api/orders', orderRoutes);
 app.use('/api/player-shows', playerShowRoutes); // 注册玩家秀路由
+app.use('/api/blindbox-items', blindboxItemRoutes); // 注册盲盒物品路由
 
 // 健康检查
 app.get('/api/health', (req, res) => {

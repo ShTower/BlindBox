@@ -60,6 +60,8 @@ export const orderAPI = {
     createOrder: (orderData) => api.post('/orders', orderData),
     getOrderById: (id) => api.get(`/orders/${id}`),
     getAllOrders: () => api.get('/orders'),
+    getOrderResults: (orderId) => api.get(`/orders/${orderId}/results`),
+    getDrawHistory: () => api.get('/orders/results/history'),
 };
 
 // 玩家秀相关API
@@ -72,6 +74,15 @@ export const playerShowAPI = {
     getComments: (showId) => api.get(`/player-shows/${showId}/comments`),
     like: (showId) => api.post(`/player-shows/${showId}/like`),
     unlike: (showId) => api.delete(`/player-shows/${showId}/like`),
+};
+
+// 盲盒物品相关API
+export const blindboxItemAPI = {
+    getAll: () => api.get('/blindbox-items'),
+    getByProductId: (productId) => api.get(`/blindbox-items/product/${productId}`),
+    create: (itemData) => api.post('/blindbox-items', itemData),
+    update: (id, itemData) => api.put(`/blindbox-items/${id}`, itemData),
+    delete: (id) => api.delete(`/blindbox-items/${id}`),
 };
 
 // 健康检查

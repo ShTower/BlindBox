@@ -68,6 +68,43 @@ function initializeTables() {
             }
         });
 
+        // 创建盲盒物品表
+        db.run(`CREATE TABLE IF NOT EXISTS blindbox_items (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            product_id INTEGER NOT NULL,
+            name TEXT NOT NULL,
+            description TEXT,
+            image_url TEXT,
+            rarity TEXT NOT NULL DEFAULT 'common',
+            probability REAL NOT NULL DEFAULT 0.1,
+            created_at TEXT DEFAULT CURRENT_TIMESTAMP,
+            FOREIGN KEY (product_id) REFERENCES products(id) ON DELETE CASCADE
+        )`, (err) => {
+            if (err) {
+                console.error('Error creating blindbox_items table:', err.message);
+            } else {
+                console.log('Blindbox_items table created or already exists.');
+            }
+        });
+
+        // 创建抽取结果表
+        db.run(`CREATE TABLE IF NOT EXISTS draw_results (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            order_id INTEGER NOT NULL,
+            item_id INTEGER NOT NULL,
+            user_id INTEGER NOT NULL,
+            created_at TEXT DEFAULT CURRENT_TIMESTAMP,
+            FOREIGN KEY (order_id) REFERENCES orders(id) ON DELETE CASCADE,
+            FOREIGN KEY (item_id) REFERENCES blindbox_items(id),
+            FOREIGN KEY (user_id) REFERENCES users(id)
+        )`, (err) => {
+            if (err) {
+                console.error('Error creating draw_results table:', err.message);
+            } else {
+                console.log('Draw_results table created or already exists.');
+            }
+        });
+
         // 创建玩家秀表
         db.run(`CREATE TABLE IF NOT EXISTS player_shows (
             id INTEGER PRIMARY KEY AUTOINCREMENT,

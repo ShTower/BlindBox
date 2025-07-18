@@ -1,5 +1,6 @@
 const User = require('../models/user');
 const Product = require('../models/product');
+const BlindboxItem = require('../models/blindboxItem');
 
 async function initializeSampleData() {
     try {
@@ -52,7 +53,52 @@ async function initializeSampleData() {
             await Product.create(productData);
         }
 
-        console.log('示例数据初始化成功！');
+        // 获取创建的产品
+        const createdProducts = await Product.findAll();
+        
+        // 为每个产品创建盲盒物品
+        for (const product of createdProducts) {
+            const items = [
+                {
+                    product_id: product.id,
+                    name: `${product.name} - 普通玩具`,
+                    description: '常见的可爱玩具',
+                    image_url: 'https://via.placeholder.com/200x200?text=Common+Toy',
+                    rarity: 'common',
+                    probability: 0.5
+                },
+                {
+                    product_id: product.id,
+                    name: `${product.name} - 稀有玩具`,
+                    description: '稀有的精美玩具',
+                    image_url: 'https://via.placeholder.com/200x200?text=Rare+Toy',
+                    rarity: 'uncommon',
+                    probability: 0.3
+                },
+                {
+                    product_id: product.id,
+                    name: `${product.name} - 精品玩具`,
+                    description: '精美的收藏玩具',
+                    image_url: 'https://via.placeholder.com/200x200?text=Epic+Toy',
+                    rarity: 'rare',
+                    probability: 0.15
+                },
+                {
+                    product_id: product.id,
+                    name: `${product.name} - 传说玩具`,
+                    description: '极其罕见的传说级玩具',
+                    image_url: 'https://via.placeholder.com/200x200?text=Legend+Toy',
+                    rarity: 'legendary',
+                    probability: 0.05
+                }
+            ];
+
+            for (const itemData of items) {
+                await BlindboxItem.create(itemData);
+            }
+        }
+
+        console.log('示例数据初始化成功！包含产品和盲盒物品');
     } catch (error) {
         console.error('初始化示例数据失败:', error);
     }

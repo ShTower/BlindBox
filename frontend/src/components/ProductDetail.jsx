@@ -13,6 +13,8 @@ const ProductDetail = () => {
     const [error, setError] = useState('');
     const [quantity, setQuantity] = useState(1);
     const [drawing, setDrawing] = useState(false);
+    const [drawResults, setDrawResults] = useState([]);
+    const [showResults, setShowResults] = useState(false);
 
     useEffect(() => {
         fetchProduct();
@@ -56,7 +58,15 @@ const ProductDetail = () => {
             });
 
             console.log('抽取成功:', response.data);
-            alert('盲盒抽取成功！');
+            
+            // 显示抽取结果
+            if (response.data.drawResults && response.data.drawResults.length > 0) {
+                setDrawResults(response.data.drawResults);
+                setShowResults(true);
+            } else {
+                alert('盲盒抽取成功！但未获得物品信息。');
+            }
+            
             // 刷新产品信息以更新库存
             fetchProduct();
         } catch (error) {
@@ -66,6 +76,35 @@ const ProductDetail = () => {
         } finally {
             setDrawing(false);
         }
+    };
+
+    const getRarityColor = (rarity) => {
+        const colors = {
+            'common': '#95a5a6',
+            'uncommon': '#27ae60',
+            'rare': '#3498db',
+            'epic': '#9b59b6',
+            'legendary': '#f39c12',
+            'mythic': '#e74c3c'
+        };
+        return colors[rarity] || colors['common'];
+    };
+
+    const getRarityName = (rarity) => {
+        const names = {
+            'common': '普通',
+            'uncommon': '稀有',
+            'rare': '精品',
+            'epic': '史诗',
+            'legendary': '传说',
+            'mythic': '神话'
+        };
+        return names[rarity] || '普通';
+    };
+
+    const closeResults = () => {
+        setShowResults(false);
+        setDrawResults([]);
     };
 
     if (loading) {
@@ -164,6 +203,57 @@ const ProductDetail = () => {
                     返回列表
                 </button>
             </div>
+
+            {/* 抽取结果弹窗 */}
+            {showResults && (
+                <div className="draw-results-overlay">
+                    <div className="draw-results-modal">
+                        <div className="modal-header">
+                            <h2>🎉 抽取结果</h2>
+                            <button className="close-button" onClick={closeResults}>×</button>
+                        </div>
+                        <div className="modal-content">
+                            <div className="results-grid">
+                                {drawResults.map((result, index) => (
+                                    <div key={index} className="result-item">
+                                        <div 
+                                            className="item-card"
+                                            style={{ borderColor: getRarityColor(result.item.rarity) }}
+                                        >
+                                            {result.item.image_url ? (
+                                                <img 
+                                                    src={result.item.image_url} 
+                                                    alt={result.item.name}
+                                                    className="item-image"
+                                                />
+                                            ) : (
+                                                <div className="placeholder-item-image">
+                                                    <span>🎁</span>
+                                                </div>
+                                            )}
+                                            <div className="item-info">
+                                                <h3 className="item-name">{result.item.name}</h3>
+                                                <p className="item-description">{result.item.description}</p>
+                                                <span 
+                                                    className="item-rarity"
+                                                    style={{ color: getRarityColor(result.item.rarity) }}
+                                                >
+                                                    {getRarityName(result.item.rarity)}
+                                                </span>
+                                            </div>
+                                        </div>
+                                    </div>
+                                ))}
+                            </div>
+                            <div className="modal-actions">
+                                <button className="confirm-button" onClick={closeResults}>
+                                    确认收取
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            )}
         </div>
     );
 };
