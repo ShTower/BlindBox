@@ -8,27 +8,30 @@ router.get('/', async (req, res) => {
         const { search, page = 1, limit = 10 } = req.query;
         let products = await Product.findAll();
         
-        // 搜索功能
-        if (search) {
+        // 搜索功能 - 改进搜索逻辑
+        if (search && search.trim()) {
+            const searchTerm = search.trim().toLowerCase();
             products = products.filter(product => 
-                product.name.toLowerCase().includes(search.toLowerCase()) ||
-                product.description.toLowerCase().includes(search.toLowerCase())
+                (product.name && product.name.toLowerCase().includes(searchTerm)) ||
+                (product.description && product.description.toLowerCase().includes(searchTerm))
             );
         }
         
         // 分页
-        const startIndex = (page - 1) * limit;
-        const endIndex = page * limit;
+        const pageNum = parseInt(page);
+        const limitNum = parseInt(limit);
+        const startIndex = (pageNum - 1) * limitNum;
+        const endIndex = pageNum * limitNum;
         const paginatedProducts = products.slice(startIndex, endIndex);
         
         res.json({
             products: paginatedProducts,
             pagination: {
-                currentPage: parseInt(page),
-                totalPages: Math.ceil(products.length / limit),
+                currentPage: pageNum,
+                totalPages: Math.ceil(products.length / limitNum),
                 totalItems: products.length,
                 hasNext: endIndex < products.length,
-                hasPrev: page > 1
+                hasPrev: pageNum > 1
             }
         });
     } catch (error) {
@@ -74,7 +77,11 @@ router.post('/', async (req, res) => {
         });
     } catch (error) {
         console.error('创建产品错误:', error);
-        res.status(500).json({ error: '服务器错误' });
+        res.status(500).json({ 
+            error: '服务器错误', 
+            details: error.message,
+            timestamp: new Date().toISOString()
+        });
     }
 });
 
@@ -89,11 +96,11 @@ router.put('/:id', async (req, res) => {
         }
         
         const updatedProduct = await Product.update(req.params.id, {
-            name: name || product.name,
-            description: description || product.description,
-            price: parseFloat(price) || product.price,
-            stock: parseInt(stock) || product.stock,
-            image_url: image_url || product.image_url
+            name: name !== undefined ? name : product.name,
+            description: description !== undefined ? description : product.description,
+            price: price !== undefined ? parseFloat(price) : product.price,
+            stock: stock !== undefined ? parseInt(stock) : product.stock,
+            image_url: image_url !== undefined ? image_url : product.image_url
         });
         
         res.json({
@@ -118,24 +125,6 @@ router.delete('/:id', async (req, res) => {
         res.json({ message: '盲盒删除成功' });
     } catch (error) {
         console.error('删除产品错误:', error);
-        res.status(500).json({ error: '服务器错误' });
-    }
-});
-
-// 搜索盲盒
-router.get('/search/:keyword', async (req, res) => {
-    try {
-        const { keyword } = req.params;
-        const products = await Product.findAll();
-        
-        const filteredProducts = products.filter(product => 
-            product.name.toLowerCase().includes(keyword.toLowerCase()) ||
-            product.description.toLowerCase().includes(keyword.toLowerCase())
-        );
-        
-        res.json({ products: filteredProducts });
-    } catch (error) {
-        console.error('搜索产品错误:', error);
         res.status(500).json({ error: '服务器错误' });
     }
 });

@@ -5,7 +5,14 @@ const Product = {
         return new Promise((resolve, reject) => {
             db.run(
                 'INSERT INTO products (name, description, price, image_url, stock, user_id) VALUES (?, ?, ?, ?, ?, ?)',
-                [productData.name, productData.description, productData.price, productData.image_url, productData.stock, productData.user_id],
+                [
+                    productData.name, 
+                    productData.description, 
+                    productData.price, 
+                    productData.image_url, 
+                    productData.stock, 
+                    productData.user_id || null
+                ],
                 function(err) {
                     if (err) {
                         reject(err);
@@ -40,6 +47,28 @@ const Product = {
             });
         });
     },
+    update: (id, productData) => {
+        return new Promise((resolve, reject) => {
+            db.run(
+                'UPDATE products SET name = ?, description = ?, price = ?, stock = ?, image_url = ? WHERE id = ?',
+                [
+                    productData.name,
+                    productData.description,
+                    productData.price,
+                    productData.stock,
+                    productData.image_url,
+                    id
+                ],
+                function(err) {
+                    if (err) {
+                        reject(err);
+                    } else {
+                        resolve({ id, ...productData });
+                    }
+                }
+            );
+        });
+    },
 
     updateStock: (id, newStock) => {
         return new Promise((resolve, reject) => {
@@ -54,6 +83,18 @@ const Product = {
                     }
                 }
             );
+        });
+    },
+
+    delete: (id) => {
+        return new Promise((resolve, reject) => {
+            db.run('DELETE FROM products WHERE id = ?', [id], function(err) {
+                if (err) {
+                    reject(err);
+                } else {
+                    resolve({ changes: this.changes });
+                }
+            });
         });
     }
 };

@@ -33,7 +33,10 @@ app.use(flash())
 
 // CORS配置 - 必须在session之前
 app.use(cors({
-    origin: process.env.FRONTEND_URL || 'http://localhost:5173',
+    origin: [
+        process.env.FRONTEND_URL || 'http://localhost:5173',
+        'http://localhost:3000'  // 允许管理界面访问
+    ],
     credentials: true
 }))
 

@@ -14,7 +14,9 @@ class AdminApp {
     bindEvents() {
         // 添加商品按钮
         document.getElementById('addProductBtn').addEventListener('click', () => {
-            this.showModal();
+            console.log('点击添加商品按钮');
+            this.currentEditingId = null; // 确保清空编辑状态
+            this.showModal('添加新盲盒');
         });
 
         // 刷新按钮
@@ -59,11 +61,17 @@ class AdminApp {
     async loadProducts() {
         try {
             this.showLoading();
-            const response = await fetch(`${this.API_BASE}/products`);
+            console.log('正在加载商品列表...');
+            
+            const response = await fetch(`${this.API_BASE}/products?limit=1000`);
+            console.log('API响应状态:', response.status);
+            
             const data = await response.json();
+            console.log('API响应数据:', data);
             
             if (response.ok) {
                 this.products = data.products || [];
+                console.log('成功加载商品:', this.products.length, '个');
                 this.renderProducts();
                 this.updateStats();
             } else {
@@ -172,49 +180,99 @@ class AdminApp {
     }
 
     showModal(title = '添加新盲盒') {
+        console.log('显示模态框:', title);
+        console.log('当前编辑ID:', this.currentEditingId);
+        
         document.getElementById('modalTitle').textContent = title;
         document.getElementById('productModal').style.display = 'block';
-        document.getElementById('productForm').reset();
-        this.currentEditingId = null;
+        
+        // 只有在添加新商品时才重置表单和编辑状态
+        if (title === '添加新盲盒') {
+            this.currentEditingId = null;
+            document.getElementById('productForm').reset();
+            console.log('添加模式 - 表单已重置，编辑ID已清空');
+        } else {
+            console.log('编辑模式 - 保持当前编辑ID:', this.currentEditingId);
+        }
     }
 
     hideModal() {
         document.getElementById('productModal').style.display = 'none';
+        document.getElementById('productForm').reset();
         this.currentEditingId = null;
+        console.log('模态框已关闭，状态已清理');
     }
 
     async editProduct(id) {
         const product = this.products.find(p => p.id === id);
-        if (!product) return;
+        if (!product) {
+            console.error('找不到商品 ID:', id);
+            return;
+        }
 
+        console.log('编辑商品:', product);
         this.currentEditingId = id;
         this.showModal('编辑商品');
 
-        // 填充表单
-        document.getElementById('productName').value = product.name;
-        document.getElementById('productDescription').value = product.description || '';
-        document.getElementById('productPrice').value = product.price;
-        document.getElementById('productStock').value = product.stock;
-        document.getElementById('productImage').value = product.image_url || '';
+        // 确保在显示模态框后再填充表单
+        setTimeout(() => {
+            document.getElementById('productName').value = product.name || '';
+            document.getElementById('productDescription').value = product.description || '';
+            document.getElementById('productPrice').value = product.price || '';
+            document.getElementById('productStock').value = product.stock || '';
+            document.getElementById('productImage').value = product.image_url || '';
+            
+            console.log('表单已填充:', {
+                name: document.getElementById('productName').value,
+                description: document.getElementById('productDescription').value,
+                price: document.getElementById('productPrice').value,
+                stock: document.getElementById('productStock').value,
+                image_url: document.getElementById('productImage').value
+            });
+        }, 100);
     }
 
     async saveProduct() {
         try {
             this.showLoading();
-
+            
+            // 验证表单数据
+            const name = document.getElementById('productName').value.trim();
+            const description = document.getElementById('productDescription').value.trim();
+            const price = parseFloat(document.getElementById('productPrice').value);
+            const stock = parseInt(document.getElementById('productStock').value);
+            const image_url = document.getElementById('productImage').value.trim();
+            
+            // 基本验证
+            if (!name) {
+                throw new Error('商品名称不能为空');
+            }
+            if (isNaN(price) || price < 0) {
+                throw new Error('价格必须是有效的数字');
+            }
+            if (isNaN(stock) || stock < 0) {
+                throw new Error('库存必须是有效的数字');
+            }
+            
             const formData = {
-                name: document.getElementById('productName').value,
-                description: document.getElementById('productDescription').value,
-                price: parseFloat(document.getElementById('productPrice').value),
-                stock: parseInt(document.getElementById('productStock').value),
-                image_url: document.getElementById('productImage').value
+                name,
+                description,
+                price,
+                stock,
+                image_url
             };
+            
+            console.log('提交商品数据:', formData);
+            console.log('编辑模式:', this.currentEditingId ? '是' : '否');
 
             const url = this.currentEditingId ? 
                 `${this.API_BASE}/products/${this.currentEditingId}` : 
                 `${this.API_BASE}/products`;
             
             const method = this.currentEditingId ? 'PUT' : 'POST';
+            
+            console.log('请求URL:', url);
+            console.log('请求方法:', method);
 
             const response = await fetch(url, {
                 method: method,
@@ -224,14 +282,27 @@ class AdminApp {
                 body: JSON.stringify(formData)
             });
 
-            const data = await response.json();
+            console.log('保存响应状态:', response.status);
+            console.log('保存响应状态文本:', response.statusText);
+            
+            let data;
+            try {
+                data = await response.json();
+                console.log('保存响应数据:', data);
+            } catch (parseError) {
+                console.error('解析响应数据失败:', parseError);
+                throw new Error(`服务器响应格式错误: ${response.status} ${response.statusText}`);
+            }
 
             if (response.ok) {
                 this.hideModal();
-                this.loadProducts();
+                await this.loadProducts(); // 确保等待数据加载完成
                 this.showSuccess(this.currentEditingId ? '商品更新成功' : '商品添加成功');
             } else {
-                throw new Error(data.error || '保存失败');
+                // 获取详细的错误信息
+                const errorText = await response.text();
+                console.error('保存失败，响应内容:', errorText);
+                throw new Error(data.error || `HTTP ${response.status}: ${response.statusText}`);
             }
         } catch (error) {
             console.error('保存商品失败:', error);
@@ -253,8 +324,10 @@ class AdminApp {
 
         try {
             this.showLoading();
-
+            
             const newStock = product.stock > 0 ? 0 : 10; // 下架设为0，上架设为10
+            
+            console.log(`${action}商品 ID:${id}, 当前库存:${product.stock}, 新库存:${newStock}`);
 
             const response = await fetch(`${this.API_BASE}/products/${id}`, {
                 method: 'PUT',
@@ -262,12 +335,17 @@ class AdminApp {
                     'Content-Type': 'application/json',
                 },
                 body: JSON.stringify({
-                    ...product,
-                    stock: newStock
+                    name: product.name,
+                    description: product.description,
+                    price: product.price,
+                    stock: newStock,
+                    image_url: product.image_url
                 })
             });
 
+            console.log('上架下架响应状态:', response.status);
             const data = await response.json();
+            console.log('上架下架响应数据:', data);
 
             if (response.ok) {
                 this.loadProducts();
@@ -293,12 +371,16 @@ class AdminApp {
 
         try {
             this.showLoading();
+            
+            console.log('删除商品 ID:', id);
 
             const response = await fetch(`${this.API_BASE}/products/${id}`, {
                 method: 'DELETE'
             });
 
+            console.log('删除响应状态:', response.status);
             const data = await response.json();
+            console.log('删除响应数据:', data);
 
             if (response.ok) {
                 this.loadProducts();

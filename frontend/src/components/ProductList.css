@@ -45,6 +45,29 @@
   transform: translateY(-2px);
 }
 
+.search-status {
+  text-align: center;
+  margin-top: 10px;
+  color: #666;
+  font-style: italic;
+}
+
+.clear-search-button {
+  margin-top: 15px;
+  padding: 8px 16px;
+  background: #6c757d;
+  color: white;
+  border: none;
+  border-radius: 6px;
+  font-size: 14px;
+  cursor: pointer;
+  transition: background-color 0.3s ease;
+}
+
+.clear-search-button:hover {
+  background: #545b62;
+}
+
 .products-grid {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
@@ -112,6 +135,7 @@
   line-height: 1.5;
   display: -webkit-box;
   -webkit-line-clamp: 2;
+  line-clamp: 2;
   -webkit-box-orient: vertical;
   overflow: hidden;
 }

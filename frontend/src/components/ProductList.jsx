@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { productAPI } from '../services/api';
 import './ProductList.css';
@@ -8,13 +8,15 @@ const ProductList = () => {
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState('');
     const [searchTerm, setSearchTerm] = useState('');
+    const [activeSearchTerm, setActiveSearchTerm] = useState(''); // 实际用于搜索的词
     const [currentPage, setCurrentPage] = useState(1);
     const [pagination, setPagination] = useState({});
     const navigate = useNavigate();
 
+    // 只在页面变化或主动搜索时加载数据
     useEffect(() => {
         fetchProducts();
-    }, [currentPage, searchTerm]);
+    }, [currentPage, activeSearchTerm]);
 
     const fetchProducts = async () => {
         try {
@@ -23,7 +25,7 @@ const ProductList = () => {
             const params = {
                 page: currentPage,
                 limit: 12,
-                search: searchTerm
+                search: activeSearchTerm // 使用主动搜索的词
             };
             const response = await productAPI.getAll(params);
             
@@ -46,8 +48,13 @@ const ProductList = () => {
 
     const handleSearch = (e) => {
         e.preventDefault();
+        // 只在点击搜索按钮时才执行搜索
+        setActiveSearchTerm(searchTerm);
         setCurrentPage(1);
-        // 不需要手动调用 fetchProducts，因为 useEffect 会监听 currentPage 的变化
+    };
+
+    const handleSearchInputChange = (e) => {
+        setSearchTerm(e.target.value);
     };
 
     const handleProductClick = (productId) => {
@@ -78,13 +85,18 @@ const ProductList = () => {
                         type="text"
                         placeholder="搜索盲盒..."
                         value={searchTerm}
-                        onChange={(e) => setSearchTerm(e.target.value)}
+                        onChange={handleSearchInputChange}
                         className="search-input"
                     />
                     <button type="submit" className="search-button">
                         搜索
                     </button>
                 </form>
+                {loading && activeSearchTerm && (
+                    <div className="search-status">
+                        <small>正在搜索 "{activeSearchTerm}"...</small>
+                    </div>
+                )}
             </div>
 
             <div className="products-grid">
@@ -119,7 +131,22 @@ const ProductList = () => {
 
             {products.length === 0 && !loading && (
                 <div className="no-products">
-                    <p>暂无盲盒</p>
+                    {activeSearchTerm ? (
+                        <div>
+                            <p>没有找到与 "{activeSearchTerm}" 相关的盲盒</p>
+                            <button 
+                                onClick={() => {
+                                    setSearchTerm('');
+                                    setActiveSearchTerm('');
+                                }}
+                                className="clear-search-button"
+                            >
+                                清除搜索
+                            </button>
+                        </div>
+                    ) : (
+                        <p>暂无盲盒</p>
+                    )}
                 </div>
             )}
 
